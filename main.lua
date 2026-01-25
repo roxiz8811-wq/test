@@ -373,3 +373,70 @@ Fluent:Notify({
 })
 
 SaveManager:LoadAutoloadConfig()
+
+-- เพิ่ม Icon สำหรับเปิด/ปิด UI (สำหรับมือถือ)
+local PlayerGui = player:WaitForChild("PlayerGui")
+local ToggleGui = Instance.new("ScreenGui")
+ToggleGui.Name = "ToggleChopUI"
+ToggleGui.Parent = PlayerGui
+ToggleGui.IgnoreGuiInset = true  -- เพื่อให้เต็มหน้าจอ
+
+local ToggleFrame = Instance.new("Frame")
+ToggleFrame.Size = UDim2.new(0, 60, 0, 60)
+ToggleFrame.Position = UDim2.new(1, -70, 0.5, 0)  -- ขวากลางจอ (ปรับได้ตามชอบ)
+ToggleFrame.BackgroundTransparency = 1
+ToggleFrame.Parent = ToggleGui
+
+local ToggleButton = Instance.new("ImageButton")
+ToggleButton.Size = UDim2.new(1, 0, 1, 0)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)  -- พื้นหลังมืด
+ToggleButton.BackgroundTransparency = 0.3
+ToggleButton.Image = "rbxassetid://6031094670"  -- Icon menu (hamburger menu)
+ToggleButton.ImageTransparency = 0.1
+ToggleButton.Parent = ToggleFrame
+
+-- ทำให้ลากได้ (สำหรับมือถือ)
+local UIS = game:GetService("UserInputService")
+local dragging = false
+local dragInput
+local dragStart
+local startPos
+
+ToggleButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = ToggleFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+ToggleButton.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if not dragging then return end
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        ToggleFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+-- ฟังก์ชันเปิด/ปิด UI โดย simulate MinimizeKey (LeftControl)
+ToggleButton.Activated:Connect(function()
+    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.LeftControl, false, game)
+    task.wait(0.05)
+    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.LeftControl, false, game)
+end)
+
+-- Corner radius สำหรับ button (ดูดีขึ้น)
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0.5, 0)  -- วงกลม
+UICorner.Parent = ToggleButton
