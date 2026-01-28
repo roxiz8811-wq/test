@@ -400,7 +400,7 @@ ToggleGui.Parent = PlayerGui  -- หรือ game.CoreGui ถ้า exploit ข
 
 -- สร้าง Frame หลักสำหรับ draggable (ทำให้ลากง่าย)
 local ToggleFrame = Instance.new("Frame")
-ToggleFrame.Size = UDim2.fromOffset(40, 40)  -- ขนาดปุ่ม
+ToggleFrame.Size = UDim2.fromOffset(50, 50)  -- ขนาดปุ่ม
 ToggleFrame.Position = UDim2.new(0.02, 0, 0.4, 0)  -- ตำแหน่งเริ่มต้น (ซ้ายบนหน่อย ๆ ปรับได้)
 ToggleFrame.BackgroundTransparency = 1  -- โปร่งใส ไม่มีพื้นหลัง
 ToggleFrame.Parent = ToggleGui
