@@ -389,3 +389,92 @@ Fluent:Notify({
 })
 
 SaveManager:LoadAutoloadConfig()
+
+local Player = game.Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+local ToggleGui = Instance.new("ScreenGui")
+ToggleGui.Name = "FluentToggleGui"
+ToggleGui.ResetOnSpawn = false  -- ไม่รีเซ็ตตอน respawn
+ToggleGui.Parent = PlayerGui  -- หรือ game.CoreGui ถ้า exploit ของคุณอนุญาต (เพื่ออยู่ด้านบนสุด)
+
+-- สร้าง Frame หลักสำหรับ draggable (ทำให้ลากง่าย)
+local ToggleFrame = Instance.new("Frame")
+ToggleFrame.Size = UDim2.fromOffset(60, 60)  -- ขนาดปุ่ม
+ToggleFrame.Position = UDim2.new(0.02, 0, 0.4, 0)  -- ตำแหน่งเริ่มต้น (ซ้ายบนหน่อย ๆ ปรับได้)
+ToggleFrame.BackgroundTransparency = 1  -- โปร่งใส ไม่มีพื้นหลัง
+ToggleFrame.Parent = ToggleGui
+
+-- สร้าง ImageButton (ปุ่มรูปภาพ)
+local ToggleButton = Instance.new("ImageButton")
+ToggleButton.Size = UDim2.fromScale(1, 1)  -- เต็ม Frame
+ToggleButton.BackgroundTransparency = 0.3  -- พื้นหลังกึ่งโปร่งใส
+ToggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)  -- สีพื้นหลังเข้ม
+ToggleButton.Image = "rbxassetid://15307540148"  -- เปลี่ยน ID รูปภาพตรงนี้ได้! (gear icon เป็นตัวอย่าง)
+ToggleButton.ImageTransparency = 0.1
+ToggleButton.ScaleType = Enum.ScaleType.Fit
+ToggleButton.Parent = ToggleFrame
+
+-- ทำให้ปุ่มกลม (Corner)
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0.5, 0)  -- กลม 50%
+UICorner.Parent = ToggleButton
+
+-- เพิ่ม Stroke เพื่อสวยงาม (ขอบ)
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = Color3.fromRGB(100, 255, 200)
+UIStroke.Thickness = 2
+UIStroke.Transparency = 0.5
+UIStroke.Parent = ToggleButton
+
+-- ระบบ Draggable (ลากวางได้ทั้ง PC และ Mobile)
+local UserInputService = game:GetService("UserInputService")
+local dragging = false
+local dragInput = nil
+local dragStart = nil
+local startPos = nil
+
+local function updateDrag(input)
+    local delta = input.Position - dragStart
+    ToggleFrame.Position = UDim2.new(
+        startPos.X.Scale,
+        startPos.X.Offset + delta.X,
+        startPos.Y.Scale,
+        startPos.Y.Offset + delta.Y
+    )
+end
+
+ToggleButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = ToggleFrame.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+ToggleButton.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        updateDrag(input)
+    end
+end)
+
+-- เมื่อกดปุ่ม -> Toggle Fluent UI
+ToggleButton.Activated:Connect(function()
+    if Window then
+        Window:Minimize()  -- ใช้ method มาตรฐานของ Fluent เพื่อเปิด/ปิด (toggle minimize)
+    else
+        warn("Window not found! Fluent UI อาจโหลดไม่สำเร็จ")
+    end
+end)
